@@ -1,0 +1,30 @@
+{
+  "model_id": "papagei_s",
+  "model_version": "2024-10",
+  "display_name": "PaPaGei-S PPG foundation model",
+  "worker": { "type": "http", "url": "http://127.0.0.1:5000/infer" },
+  "input": {
+    "modalities": [{ "stream": "ppg", "channel": "green", "unit": "count" }],
+    "window_duration_s": 10,
+    "window_stride_s": 5,
+    "target_sample_rate_hz": 125,
+    "target_sample_count": 1250,
+    "tensor_shape": [1, 1, 1250]
+  },
+  "preprocessing": {
+    "pipeline_id": "papagei_ppg_bandpass_resample_quality_normalize",
+    "pipeline_version": "0.2.0",
+    "require_contiguous_sample_indices": true,
+    "normalization": "zscore_per_window",
+    "bandpass_filter": {
+      "family": "chebyshev_type_ii",
+      "order": 4,
+      "low_cut_hz": 0.5,
+      "high_cut_hz": 12.0,
+      "zero_phase": true
+    },
+    "quality_rules": ["finite_values", "non_flatline", "continuous_sample_indices"]
+  },
+  "output": { "type": "embedding", "dimension": 512, "interpretation": "encoder_feature_vector_not_a_prediction" },
+  "heads": { "discovery_endpoint": "/heads", "contract": "versioned_manifest_plus_learned_weights", "default": null }
+}

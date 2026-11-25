@@ -1,0 +1,91 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Per-instance settings, read from android/instance.properties when present.
+def instanceProperties = new Properties()
+def instanceFile = rootProject.file('instance.properties')
+if (instanceFile.exists()) {
+    instanceFile.withInputStream { instanceProperties.load(it) }
+}
+// A -P value wins even when empty (scripts/release_apk.sh passes an empty address to build
+// without a default server); otherwise instance.properties; otherwise empty.
+ext.instanceSetting = { String key ->
+    (project.hasProperty(key) ? project.property(key) : (instanceProperties.getProperty(key) ?: '')).toString().trim()
+}
+
+def appVersionCodeValue = Integer.parseInt((project.findProperty('appVersionCode') ?: '1').toString())
+def appVersionNameValue = (project.findProperty('appVersionName') ?: '1.0').toString()
+
+android {
+    namespace 'com.wearable.controller'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.wearable.controller"
+        minSdk 26
+        targetSdk 34
+        // scripts/release_apk.sh passes these from git; a plain build keeps 1 / "1.0".
+        versionCode appVersionCodeValue
+        versionName appVersionNameValue
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Instance settings: which Supabase project and which cloud server this
+        // build talks to. They live in android/instance.properties (gitignored;
+        // copy instance.properties.example), or can be passed with -P on the
+        // command line. None of them is a secret -- the publishable key is meant
+        // to ship in a client -- but each one names a particular deployment, so
+        // they are kept out of the repository.
+        buildConfigField "String", "SUPABASE_URL", "\"${instanceSetting('supabaseUrl')}\""
+        buildConfigField "String", "SUPABASE_PUBLISHABLE_KEY", "\"${instanceSetting('supabasePublishableKey')}\""
+        // Built in so a participant only signs in: the account supplies the
+        // broker login, the app already knows where the service is.
+        buildConfigField "String", "CLOUD_BACKEND_URL", "\"${instanceSetting('cloudBackendUrl')}\""
+        buildConfigField "String", "CLOUD_BROKER_URL", "\"${instanceSetting('cloudBrokerUrl')}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    
+    // Bluetooth BLE
+    implementation 'androidx.bluetooth:bluetooth:1.0.0-alpha02'
+    
+    // WebSockets and Networking
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    // Encrypted storage for identity-provider tokens.
+    implementation 'androidx.security:security-crypto:1.0.0'
+    
+    // JSON Parsing
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // MQTT - Eclipse Paho
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+
+    implementation 'androidx.activity:activity-ktx:1.8.2'
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
+    
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}

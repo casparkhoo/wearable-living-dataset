@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- An 8-bit heart, small, in the top-left and well inside the edge. -->
+    <path
+        android:fillColor="#3DFF7A"
+        android:pathData="M32.6,31.0 h5.2 v2.6 h-5.2 z M40.4,31.0 h5.2 v2.6 h-5.2 z M30.0,33.6 h18.2 v2.6 h-18.2 z M30.0,36.2 h18.2 v2.6 h-18.2 z M32.6,38.8 h13.0 v2.6 h-13.0 z M35.2,41.4 h7.8 v2.6 h-7.8 z M37.8,44.0 h2.6 v2.6 h-2.6 z" />
+</vector>

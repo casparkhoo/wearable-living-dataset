@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wearable-research.local/contracts/processor-run-result.schema.json",
+  "title": "Processor Run Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "run_id", "processor_ref", "status", "quality", "outputs", "provenance"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "contract_version": { "const": "1.0.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "processor_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "status": { "enum": ["succeeded", "rejected", "failed"] },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted", "rule_results"],
+      "properties": {
+        "accepted": { "type": "boolean" },
+        "rule_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule_id", "passed"],
+            "properties": {
+              "rule_id": { "type": "string", "minLength": 1 },
+              "passed": { "type": "boolean" },
+              "value": {},
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "artifact_type", "dtype", "shape", "location", "semantics"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "artifact_type": {
+            "enum": ["prepared_input", "feature_vector", "embedding", "prediction", "quality_report", "export"]
+          },
+          "dtype": { "type": "string", "minLength": 1 },
+          "shape": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1 }
+          },
+          "location": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "value", "sha256"],
+            "properties": {
+              "kind": { "enum": ["inline_json", "blob_uri"] },
+              "value": {},
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          },
+          "semantics": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_sha256",
+        "input_artifact_refs",
+        "code_revision",
+        "environment_identifier",
+        "component_digest",
+        "started_at",
+        "completed_at"
+      ],
+      "properties": {
+        "manifest_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "input_artifact_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "code_revision": { "type": "string", "minLength": 1 },
+        "environment_identifier": { "type": "string", "minLength": 1 },
+        "component_digest": { "type": "string", "minLength": 1 },
+        "started_at": { "type": "string", "minLength": 1 },
+        "completed_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+        "message": { "type": "string", "minLength": 1 },
+        "retryable": { "type": "boolean" }
+      }
+    }
+  }
+}

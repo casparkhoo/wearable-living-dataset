@@ -1,0 +1,102 @@
+# Continuous integration. Needs no secrets: every job runs the offline tests only
+# (no database, broker, phone, Supabase project or model weights). Deployment
+# values and instance addresses never appear here; they come from files and
+# environment variables on the machines that deploy, which this workflow does not do.
+#
+# Suites and how to run them locally: docs/TESTING.md.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  backend:
+    name: Backend (cargo test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - name: Unit tests
+        run: cargo test --locked
+
+  frontend:
+    name: Console (test and build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Unit tests
+        run: npm test --if-present
+      - name: Type-check and build
+        run: npm run build
+
+  android:
+    name: Android (JVM unit tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android-application/android
+    steps:
+      - uses: actions/checkout@v4
+      # Gradle 9 needs JDK 17 or newer to run; the app itself compiles at Java 8 level.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # Caches the Gradle distribution and dependencies.
+      - uses: gradle/actions/setup-gradle@v4
+      # No instance.properties here: the Supabase and server settings compile in as empty
+      # strings, which the unit tests do not use. The hosted runner image provides the Android SDK.
+      - name: Unit tests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon :app:testDebugUnitTest
+
+  python:
+    name: Python (offline tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install numpy scipy
+      - name: Script tests
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Head manifest tests
+        run: python -m unittest discover -s ml-inference-server/tests -v
+      - name: Processor contract tests
+        run: python scripts/test_processor_contract.py
+      - name: Processor manifests and examples validate
+        run: python scripts/validate_processor_contract.py

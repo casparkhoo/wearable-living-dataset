@@ -1,0 +1,139 @@
+# The whole system on one computer: database, broker, backend, PaPaGei worker
+# and web console, behind a single gateway on one port.
+#
+# Use scripts/local.sh rather than calling this directly: it creates .env with
+# fresh secrets, starts everything, waits until it is healthy and prints the
+# addresses the phone app and console need. See docs/LOCAL_HOSTING.md.
+#
+# Everything is reached through the gateway on GATEWAY_PORT (default 8088):
+#   /            web console
+#   /api/*, /health   backend
+#   /mqtt        broker over WebSockets (what the phone app uses)
+# The broker's plain MQTT port is also published on this computer (11883), for
+# scripts such as scripts/live_fault_injection.py.
+
+name: wearable-local
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?run scripts/local.sh up to create .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-wearable_living_dataset}
+      MYSQL_USER: ${MYSQL_USER:-wearable}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?run scripts/local.sh up to create .env}
+    # A laptop has memory to spare, unlike the 1 GB reference server: a larger
+    # buffer pool keeps the growing sample tables in memory.
+    command: ["--innodb-buffer-pool-size=${MYSQL_BUFFER_POOL:-1G}"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Applied only when the data volume is first created.
+      - ../../backend/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    # The password file is written by broker-accounts; start with an empty one
+    # so the broker comes up before the first account exists.
+    command: ["sh", "-c", "touch /mosquitto/accounts/passwordfile && exec mosquitto -c /mosquitto/config/mosquitto.conf"]
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ../cloud/mosquitto/aclfile:/mosquitto/config/aclfile:ro
+      - mosquitto-accounts:/mosquitto/accounts
+      - mosquitto-data:/mosquitto/data
+    ports:
+      - "${MQTT_HOST_BIND:-127.0.0.1}:${MQTT_HOST_PORT:-11883}:1883"
+
+  # Gives every participant their own broker account within a minute of their
+  # first sign-in (the job a systemd timer does on the cloud server). It shares
+  # the broker's process namespace so it can tell the broker to reload.
+  broker-accounts:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    pid: "service:mosquitto"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    entrypoint: ["/bin/sh", "/scripts/broker_accounts.sh"]
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-wearable_living_dataset}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MQTT_USERNAME: ${MQTT_USERNAME:-wearable_backend}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_USER_SECRET: ${MQTT_USER_SECRET}
+      PASSWORD_FILE: /mosquitto/accounts/passwordfile
+    volumes:
+      - ../../scripts/broker_accounts.sh:/scripts/broker_accounts.sh:ro
+      - mosquitto-accounts:/mosquitto/accounts
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: deployment/cloud/Dockerfile
+    restart: unless-stopped
+    environment:
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8080
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-wearable}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-wearable_living_dataset}
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      MQTT_TOPIC_FILTER: sensors/#
+      MQTT_STATUS_TOPIC_PREFIX: status
+      MQTT_USERNAME: ${MQTT_USERNAME:-wearable_backend}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_USER_SECRET: ${MQTT_USER_SECRET}
+      SUPABASE_URL: ${SUPABASE_URL:?set SUPABASE_URL in deployment/local/.env}
+      AUTH_JWT_AUDIENCE: ${AUTH_JWT_AUDIENCE:-authenticated}
+      AUTH_ALLOW_SHARED_TOKEN: "false"
+      API_TOKEN: ${API_TOKEN}
+      ML_INFERENCE_ENABLED: ${ML_INFERENCE_ENABLED:-true}
+      ML_INFERENCE_URL: http://papagei:5000
+      ML_LIVE_HEAD_ID: ${ML_LIVE_HEAD_ID:-hr_ring_stretch_v2}
+      LIVE_HR_SOURCE: ${LIVE_HR_SOURCE:-papagei}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    ports:
+      # Direct access for scripts on this computer only.
+      - "127.0.0.1:${BACKEND_HOST_PORT:-18080}:8080"
+
+  papagei:
+    build:
+      context: ../..
+      dockerfile: deployment/cloud/papagei.Dockerfile
+    restart: unless-stopped
+
+  # Web console and reverse proxy in one: serves the console and forwards the
+  # API and the broker's WebSocket port, so one address serves everything.
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deployment/local/gateway.Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:?set SUPABASE_PUBLISHABLE_KEY in deployment/local/.env}
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - mosquitto
+    ports:
+      - "${GATEWAY_BIND:-0.0.0.0}:${GATEWAY_PORT:-8088}:8088"
+
+volumes:
+  mysql-data:
+  mosquitto-accounts:
+  mosquitto-data:

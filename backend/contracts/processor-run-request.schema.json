@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wearable-research.local/contracts/processor-run-request.schema.json",
+  "title": "Processor Run Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "run_id", "processor_ref", "context", "inputs", "parameters"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "contract_version": { "const": "1.0.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "processor_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "manifest_sha256"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "version": { "type": "string", "minLength": 1 },
+        "manifest_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot_id", "analysis_example_id"],
+      "properties": {
+        "snapshot_id": { "type": "string", "minLength": 1 },
+        "analysis_example_id": { "type": "string", "minLength": 1 },
+        "experiment_id": { "type": "string", "minLength": 1 },
+        "split": { "enum": ["train", "validation", "test", "unassigned"] }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "artifact_ref", "location", "metadata"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "artifact_ref": { "type": "string", "minLength": 1 },
+          "location": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "value", "sha256"],
+            "properties": {
+              "kind": { "enum": ["inline_json", "blob_uri"] },
+              "value": {},
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dtype", "shape", "channels", "unit", "source_bounds", "clock"],
+            "properties": {
+              "dtype": { "type": "string", "minLength": 1 },
+              "shape": {
+                "type": "array",
+                "items": { "type": "integer", "minimum": 1 }
+              },
+              "channels": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "unit": { "type": "string", "minLength": 1 },
+              "source_sample_rate_hz": { "type": "number", "exclusiveMinimum": 0 },
+              "source_bounds": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["evidence_session_id", "start", "end", "basis"],
+                "properties": {
+                  "evidence_session_id": { "type": "string", "minLength": 1 },
+                  "start": { "type": "number" },
+                  "end": { "type": "number" },
+                  "basis": { "enum": ["source_time_ms", "sample_index", "experiment_time_ms"] }
+                }
+              },
+              "clock": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["source", "quality"],
+                "properties": {
+                  "source": { "type": "string", "minLength": 1 },
+                  "quality": { "enum": ["unknown", "declared", "reconstructed", "validated"] }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": { "type": "object" }
+  }
+}

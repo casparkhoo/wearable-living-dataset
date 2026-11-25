@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home screen, compact: the glasses view, who and what is connected, the one
+     recording button, activity tiles and a one-line analysis, all close to one screen. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <!-- ── What the glasses show, drawn here too ──────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/glasses_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#050A07"
+            app:cardCornerRadius="10dp"
+            app:contentPadding="8dp"
+            app:strokeColor="#14381F"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:letterSpacing="0.2"
+                        android:text="GLASSES VIEW"
+                        android:textColor="#3DFF7A"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/glasses_state"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="shown when you look up"
+                        android:textColor="#6FA07C"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <com.wearable.controller.views.GlassesPreviewView
+                    android:id="@+id/glasses_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/glasses_left_chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_glasses_chip"
+                        android:gravity="center"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="5dp"
+                        android:text="left --"
+                        android:textColor="#3DFF7A"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/glasses_right_chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_glasses_chip"
+                        android:gravity="center"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="5dp"
+                        android:text="right --"
+                        android:textColor="#3DFF7A"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <Button
+            android:id="@+id/record_sign_in_button"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:minHeight="48dp"
+            android:text="Sign in"
+            android:textAllCaps="false"
+            android:visibility="gone" />
+
+        <!-- ── Recording ──────────────────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:contentPadding="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/record_study_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="10dp"
+                        android:text="Study"
+                        android:textColor="@color/warm_muted"
+                        android:textSize="12sp" />
+
+                    <Spinner
+                        android:id="@+id/study_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/record_toggle_button"
+                    style="@style/Widget.WearableController.BigButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Start recording" />
+
+                <TextView
+                    android:id="@+id/record_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="Connect a wearable to start"
+                    android:textColor="@color/warm_muted"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/record_options_toggle"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_horizontal"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:text="More options"
+                    android:textAllCaps="false"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:id="@+id/record_options"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Recording name (optional)">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/experiment_label_input"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:hint="Protocol (optional)">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/protocol_input"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── Activity labels ────────────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:contentPadding="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/label_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="Start a recording, then tap an activity. Tap it again to stop."
+                    android:textColor="@color/warm_muted"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/label_sitting"
+                        style="@style/Widget.WearableController.LabelChip"
+                        android:text="Sitting" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/label_standing"
+                        style="@style/Widget.WearableController.LabelChip"
+                        android:text="Standing" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/label_walking"
+                        style="@style/Widget.WearableController.LabelChip"
+                        android:text="Walking" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/label_running"
+                        style="@style/Widget.WearableController.LabelChip"
+                        android:text="Running" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/label_lying"
+                        style="@style/Widget.WearableController.LabelChip"
+                        android:text="Lying down" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/label_other"
+                        style="@style/Widget.WearableController.LabelChip"
+                        android:text="Other…" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── Live analysis from the cloud ───────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/live_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:visibility="gone"
+            app:contentPadding="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/live_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/warm_text"
+                    android:textSize="12sp" />
+
+                <!-- One row per wearable: its own heart rate, movement and trends. -->
+                <LinearLayout
+                    android:id="@+id/live_devices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <!-- Movement and the five-minute trend side by side; the pulse waveform
+                     is on the glasses card above, so its own chart is kept but hidden. -->
+                <LinearLayout
+                    android:id="@+id/live_traces"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Movement · 10 s"
+                            android:textColor="@color/warm_muted"
+                            android:textSize="10sp" />
+
+                        <com.wearable.controller.views.TraceView
+                            android:id="@+id/trace_accel"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@color/surface_variant" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="6dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/trace_hr_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Heart rate · 5 min"
+                            android:textColor="@color/warm_muted"
+                            android:textSize="10sp" />
+
+                        <com.wearable.controller.views.TraceView
+                            android:id="@+id/trace_hr"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@color/surface_variant" />
+                    </LinearLayout>
+
+                    <com.wearable.controller.views.TraceView
+                        android:id="@+id/trace_ppg"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

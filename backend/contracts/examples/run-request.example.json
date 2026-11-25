@@ -1,0 +1,45 @@
+{
+  "$schema": "../processor-run-request.schema.json",
+  "contract_version": "1.0.0",
+  "run_id": "run_example_001",
+  "processor_ref": {
+    "id": "handcrafted_ppg",
+    "version": "1.0.0",
+    "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "context": {
+    "snapshot_id": "snapshot_example_001",
+    "analysis_example_id": "example_001",
+    "experiment_id": "experiment_001",
+    "split": "test"
+  },
+  "inputs": [
+    {
+      "name": "ppg_signal",
+      "artifact_ref": "artifact_native_ppg_001",
+      "location": {
+        "kind": "inline_json",
+        "value": [101.0, 102.5, 100.8, 103.2],
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "metadata": {
+        "dtype": "float32",
+        "shape": [4],
+        "channels": ["green"],
+        "unit": "count",
+        "source_sample_rate_hz": 25,
+        "source_bounds": {
+          "evidence_session_id": "session_001",
+          "start": 1000,
+          "end": 1003,
+          "basis": "sample_index"
+        },
+        "clock": {
+          "source": "device_sample_index",
+          "quality": "reconstructed"
+        }
+      }
+    }
+  ],
+  "parameters": {}
+}

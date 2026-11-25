@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the thesis below."
+title: "A Living Dataset Architecture for Reproducible Multi-Wearable Research"
+type: software
+authors:
+  - family-names: Khoo
+    given-names: Caspar
+license: MIT
+version: "1.0.0"
+date-released: "2026-11-23"
+repository-code: "https://github.com/casparkhoo/wearable-living-dataset"
+url: "https://github.com/casparkhoo/wearable-living-dataset"
+keywords:
+  - wearables
+  - living dataset
+  - reproducible research
+  - photoplethysmography
+preferred-citation:
+  type: thesis
+  title: "A Living Dataset Architecture for Reproducible Multi-Wearable Research"
+  authors:
+    - family-names: Khoo
+      given-names: Caspar
+  institution:
+    name: "School of Computer Science and Engineering, UNSW Sydney"
+  thesis-type: "Bachelor of Engineering (Software Engineering) thesis"
+  year: 2026

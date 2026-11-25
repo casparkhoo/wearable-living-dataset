@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme: pure black surfaces and one accent, lime green. Amber and red stay
+         only as warning colours. -->
+    <color name="brand">#5FD022</color>
+    <color name="brand_dark">#86E050</color>
+    <color name="brand_soft">#12260A</color>
+    <color name="on_brand">#031000</color>
+
+    <color name="cream">#000000</color>
+    <color name="surface">#0A0A0A</color>
+    <color name="surface_variant">#121212</color>
+
+    <color name="warm_text">#EEF3E6</color>
+    <color name="warm_muted">#9AA58C</color>
+    <color name="warm_border">#1E2A14</color>
+
+    <color name="status_green">#5FD022</color>
+    <color name="status_green_soft">#12260A</color>
+    <color name="status_amber">#E8AA4D</color>
+    <color name="status_red">#F07B70</color>
+
+    <color name="console_bg">#000000</color>
+    <color name="console_text">#5FD022</color>
+    <color name="white">#FFFFFF</color>
+</resources>

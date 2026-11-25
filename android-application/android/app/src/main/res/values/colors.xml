@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Research blue brand -->
+    <color name="brand">#2563EB</color>
+    <color name="brand_dark">#1D4ED8</color>
+    <color name="brand_soft">#E5EDFF</color>
+    <color name="on_brand">#FFFFFF</color>
+
+    <!-- Cool neutral surfaces -->
+    <color name="cream">#F6F8FC</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F0F4FA</color>
+
+    <!-- Text -->
+    <color name="warm_text">#172033</color>
+    <color name="warm_muted">#61708A</color>
+    <color name="warm_border">#DCE3EE</color>
+
+    <!-- Status -->
+    <color name="status_green">#1F9D72</color>
+    <color name="status_green_soft">#E3F4EC</color>
+    <color name="status_amber">#D98A2B</color>
+    <color name="status_red">#D14C3D</color>
+
+    <!-- Console -->
+    <color name="console_bg">#0F172A</color>
+    <color name="console_text">#5FD08A</color>
+
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,146 @@
+{
+  "$schema": "../contracts/processor-manifest.schema.json",
+  "contract_version": "1.0.0",
+  "processor": {
+    "id": "papagei_s",
+    "version": "1.0.0",
+    "display_name": "PaPaGei-S PPG encoder",
+    "kind": "encoder",
+    "description": "Domain-specific pretrained PPG encoder used to verify a fixed-shape, model-specific derived-input path.",
+    "source_url": "https://github.com/Nokia-Bell-Labs/papagei-foundation-model"
+  },
+  "lifecycle": {
+    "status": "draft",
+    "requirements_status": "verified",
+    "open_questions": [
+      "Replace the current legacy /infer endpoint with the generic processor-http-v1 request and result envelopes."
+    ]
+  },
+  "execution": {
+    "adapter_id": "papagei_s_http",
+    "protocol": "processor-http-v1",
+    "deterministic": true,
+    "timeout_ms": 120000,
+    "resource_hints": {
+      "cpu_supported": true,
+      "gpu_supported": true,
+      "minimum_memory_mb": 2048
+    }
+  },
+  "inputs": [
+    {
+      "name": "ppg_signal",
+      "role": "signal",
+      "selector": {
+        "modality": "ppg",
+        "stream": "ppg",
+        "channels": ["green"],
+        "unit": "count"
+      },
+      "window": {
+        "duration_ms": 10000,
+        "stride_ms": 5000,
+        "alignment": "sample_index"
+      },
+      "sampling": {
+        "source_rate_policy": "preserve",
+        "target_rate_policy": "exact",
+        "target_rate_hz": 125,
+        "target_sample_count": 1250,
+        "gap_policy": "reject"
+      },
+      "tensor": {
+        "dtype": "float32",
+        "shape": [1, 1, 1250],
+        "channel_order": ["green"]
+      }
+    }
+  ],
+  "preprocessing": [
+    {
+      "step_id": "validate_window",
+      "operation": "quality.window_validation",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "require_finite": true,
+        "reject_flatline": true,
+        "require_contiguous_sample_indices": true
+      },
+      "emits_intermediate_artifact": false
+    },
+    {
+      "step_id": "bandpass_filter",
+      "operation": "signal.chebyshev_type_ii_bandpass",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "order": 4,
+        "stopband_attenuation_db": 20,
+        "low_cut_hz": 0.5,
+        "high_cut_hz": 12.0,
+        "zero_phase": true,
+        "upper_cutoff_policy": "clamp_below_source_nyquist"
+      },
+      "emits_intermediate_artifact": true
+    },
+    {
+      "step_id": "resample",
+      "operation": "signal.linear_resample",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "target_rate_hz": 125,
+        "target_sample_count": 1250
+      },
+      "emits_intermediate_artifact": true
+    },
+    {
+      "step_id": "normalise",
+      "operation": "signal.zscore",
+      "version": "1.0.0",
+      "fit_scope": "per_example",
+      "parameters": {
+        "axis": "time"
+      },
+      "emits_intermediate_artifact": true
+    }
+  ],
+  "quality": {
+    "required_clock_quality": "reconstructed",
+    "rules": ["finite_values", "non_flatline", "continuous_sample_indices"],
+    "on_failure": "reject"
+  },
+  "outputs": [
+    {
+      "name": "embedding",
+      "artifact_type": "embedding",
+      "dtype": "float32",
+      "shape": [512],
+      "storage": "blob_reference",
+      "semantics": "Encoder feature vector; not a physiological prediction."
+    },
+    {
+      "name": "quality_report",
+      "artifact_type": "quality_report",
+      "dtype": "json",
+      "shape": [],
+      "storage": "json",
+      "semantics": "Input-quality measurements and applied preprocessing parameters."
+    }
+  ],
+  "reproducibility": {
+    "manifest_checksum": true,
+    "input_checksum": true,
+    "output_checksum": true,
+    "code_revision": true,
+    "environment_identifier": true,
+    "component_digest": true
+  },
+  "evaluation": {
+    "requires_fit": false,
+    "fit_split": "external_pretrained",
+    "grouping_unit": "experiment",
+    "supported_metrics": ["lineage_completeness", "rerun_agreement", "runtime_ms", "artifact_size_bytes"]
+  }
+}

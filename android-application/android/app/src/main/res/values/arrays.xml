@@ -1,0 +1,6 @@
+<resources>
+    <string-array name="connection_profiles">
+        <item>Local</item>
+        <item>Cloud</item>
+    </string-array>
+</resources>

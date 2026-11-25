@@ -1,0 +1,129 @@
+{
+  "$schema": "../contracts/processor-manifest.schema.json",
+  "contract_version": "1.0.0",
+  "processor": {
+    "id": "handcrafted_ppg",
+    "version": "1.0.0",
+    "display_name": "Handcrafted PPG feature extractor",
+    "kind": "feature_extractor",
+    "description": "Interpretable statistical and spectral feature extraction used to verify the generic fitted-feature path."
+  },
+  "lifecycle": {
+    "status": "draft",
+    "requirements_status": "draft",
+    "open_questions": [
+      "Confirm spectral bands after the accepted source rate and validation task are frozen.",
+      "Decide whether wavelet features are part of version 1 or a later verifier."
+    ]
+  },
+  "execution": {
+    "adapter_id": "handcrafted_ppg_local",
+    "protocol": "processor-local-v1",
+    "deterministic": true,
+    "timeout_ms": 30000,
+    "resource_hints": {
+      "cpu_supported": true,
+      "gpu_supported": false,
+      "minimum_memory_mb": 256
+    }
+  },
+  "inputs": [
+    {
+      "name": "ppg_signal",
+      "role": "signal",
+      "selector": {
+        "modality": "ppg",
+        "stream": "ppg",
+        "channels": ["green"],
+        "unit": "count"
+      },
+      "window": {
+        "duration_ms": 10000,
+        "stride_ms": 5000,
+        "alignment": "source_time"
+      },
+      "sampling": {
+        "source_rate_policy": "preserve",
+        "target_rate_policy": "preserve",
+        "gap_policy": "reject"
+      },
+      "tensor": {
+        "dtype": "float32",
+        "shape": [1, "time"],
+        "channel_order": ["green"]
+      }
+    }
+  ],
+  "preprocessing": [
+    {
+      "step_id": "validate_window",
+      "operation": "quality.window_validation",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "require_finite": true,
+        "reject_flatline": true,
+        "reject_gaps": true
+      },
+      "emits_intermediate_artifact": false
+    },
+    {
+      "step_id": "statistical_features",
+      "operation": "features.statistical",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "features": ["mean", "standard_deviation", "median", "interquartile_range", "minimum", "maximum", "root_mean_square", "skewness", "kurtosis"]
+      },
+      "emits_intermediate_artifact": false
+    },
+    {
+      "step_id": "spectral_features",
+      "operation": "features.welch_spectrum",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "features": ["dominant_frequency", "total_power", "spectral_centroid", "spectral_entropy"],
+        "band_powers": "task_configuration_required"
+      },
+      "emits_intermediate_artifact": false
+    }
+  ],
+  "quality": {
+    "required_clock_quality": "declared",
+    "rules": ["finite_values", "non_flatline", "continuous_source_interval"],
+    "on_failure": "reject"
+  },
+  "outputs": [
+    {
+      "name": "features",
+      "artifact_type": "feature_vector",
+      "dtype": "float64",
+      "shape": ["feature_count"],
+      "storage": "tabular",
+      "semantics": "Named statistical and spectral features; not a prediction."
+    },
+    {
+      "name": "quality_report",
+      "artifact_type": "quality_report",
+      "dtype": "json",
+      "shape": [],
+      "storage": "json",
+      "semantics": "Per-rule acceptance values and rejection reasons."
+    }
+  ],
+  "reproducibility": {
+    "manifest_checksum": true,
+    "input_checksum": true,
+    "output_checksum": true,
+    "code_revision": true,
+    "environment_identifier": true,
+    "component_digest": true
+  },
+  "evaluation": {
+    "requires_fit": false,
+    "fit_split": "not_applicable",
+    "grouping_unit": "experiment",
+    "supported_metrics": ["lineage_completeness", "rerun_agreement", "runtime_ms", "artifact_size_bytes"]
+  }
+}

@@ -1,0 +1,98 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../../backend/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../../backend/migrations/001_add_experiment_control_to_sessions.sql:/docker-entrypoint-initdb.d/02-migration.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/aclfile:/mosquitto/config/aclfile:ro
+      - ./mosquitto/passwordfile:/mosquitto/config/passwordfile
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    ports:
+      - "127.0.0.1:1883:1883"
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: deployment/cloud/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8080
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      MQTT_TOPIC_FILTER: sensors/#
+      MQTT_STATUS_TOPIC_PREFIX: status
+      MQTT_USERNAME: ${MQTT_USERNAME}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      API_TOKEN: ${API_TOKEN}
+      ML_INFERENCE_ENABLED: ${ML_INFERENCE_ENABLED:-true}
+      ML_INFERENCE_URL: http://papagei:5000
+      ML_LIVE_HEAD_ID: ${ML_LIVE_HEAD_ID:-hr_ring_stretch_v2}
+      LIVE_HR_SOURCE: ${LIVE_HR_SOURCE:-papagei}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  # PaPaGei-S on ONNX Runtime. Reachable only from the backend on the compose
+  # network; the memory cap keeps it from crowding MySQL on the 1 GB VM.
+  papagei:
+    build:
+      context: ../..
+      dockerfile: deployment/cloud/papagei.Dockerfile
+    restart: unless-stopped
+    mem_limit: 300m
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN in .env}
+      MQTT_DOMAIN: ${MQTT_DOMAIN:?set MQTT_DOMAIN in .env}
+    depends_on:
+      - backend
+      - mosquitto
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  mysql-data:
+  mosquitto-data:
+  mosquitto-log:
+  caddy-data:
+  caddy-config:

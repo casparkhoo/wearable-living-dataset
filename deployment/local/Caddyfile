@@ -1,0 +1,29 @@
+# One port for everything. Plain HTTP: put HTTPS in front with a tunnel
+# (tailscale serve, cloudflared) when the phone is not on this network.
+{
+	auto_https off
+	admin off
+}
+
+:8088 {
+	# One line per request, so a client that cannot connect (or is refused by a
+	# browser's cross-site rules) can be told apart from one that never arrives.
+	log {
+		output stdout
+		format console
+	}
+	handle /mqtt* {
+		reverse_proxy mosquitto:9001
+	}
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+	handle /health {
+		reverse_proxy backend:8080
+	}
+	handle {
+		root * /srv/console
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -1,0 +1,12 @@
+*.hprof
+local.properties
+.gradle/
+build/
+
+instance.properties
+
+# Signing material never belongs in the repository (release_apk.sh keeps it in ~/.thesis).
+*.keystore
+*.jks
+keystore.properties
+release-signing.properties

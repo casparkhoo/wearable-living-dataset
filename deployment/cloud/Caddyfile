@@ -1,0 +1,14 @@
+# Two public hostnames, both set in deployment/cloud/.env:
+#   API_DOMAIN   the REST API the app and console call
+#   MQTT_DOMAIN  MQTT over secure WebSockets for the phones
+# Caddy obtains and renews TLS certificates for both automatically, so the
+# DNS records must point at this server before the stack starts. Without a
+# domain of your own, <name>.<public-ip>.nip.io resolves to the IP for free.
+
+{$API_DOMAIN} {
+    reverse_proxy backend:8080
+}
+
+{$MQTT_DOMAIN} {
+    reverse_proxy /mqtt* mosquitto:9001
+}

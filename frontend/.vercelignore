@@ -1,0 +1,6 @@
+# Only the web console is deployed to Vercel; the desktop (Tauri) app and build output are not.
+src-tauri
+node_modules
+dist
+*.cmd
+mosquitto.conf

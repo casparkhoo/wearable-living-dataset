@@ -1,0 +1,48 @@
+{
+  "$schema": "../processor-run-result.schema.json",
+  "contract_version": "1.0.0",
+  "run_id": "run_example_001",
+  "processor_ref": {
+    "id": "handcrafted_ppg",
+    "version": "1.0.0"
+  },
+  "status": "succeeded",
+  "quality": {
+    "accepted": true,
+    "rule_results": [
+      {
+        "rule_id": "finite_values",
+        "passed": true,
+        "value": true
+      },
+      {
+        "rule_id": "non_flatline",
+        "passed": true,
+        "value": 1.75
+      }
+    ]
+  },
+  "outputs": [
+    {
+      "name": "features",
+      "artifact_type": "feature_vector",
+      "dtype": "float64",
+      "shape": [4],
+      "location": {
+        "kind": "inline_json",
+        "value": [101.875, 0.9417, 101.75, 2.4],
+        "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "semantics": "Example named feature values; not a prediction."
+    }
+  ],
+  "provenance": {
+    "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "input_artifact_refs": ["artifact_native_ppg_001"],
+    "code_revision": "example-revision",
+    "environment_identifier": "example-environment",
+    "component_digest": "sha256:example-component-digest",
+    "started_at": "2026-07-20T08:00:00Z",
+    "completed_at": "2026-07-20T08:00:01Z"
+  }
+}

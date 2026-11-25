@@ -1,0 +1,12 @@
+# Copy to instance.properties (gitignored) and fill in your own instance.
+# None of these is a secret, but each one names a particular deployment.
+# See docs/SELF_HOSTING.md, step 6.
+
+# Supabase project (Project Settings -> API). The publishable key is designed to
+# ship inside an app. NEVER put a secret or service_role key here.
+supabaseUrl=https://<project-ref>.supabase.co
+supabasePublishableKey=sb_publishable_...
+
+# Your server, as configured in deployment/cloud/.env (API_DOMAIN, MQTT_DOMAIN).
+cloudBackendUrl=https://api.example.org
+cloudBrokerUrl=wss://mqtt.example.org/mqtt

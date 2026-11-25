@@ -1,0 +1,55 @@
+{
+  "head_id": "hr_ring_stretch_v2",
+  "head_version": "2026-11-11",
+  "display_name": "Heart rate (PaPaGei-S + ridge, rule-labelled, time-stretched)",
+  "base_model_id": "papagei_s",
+  "input_dimension": 512,
+  "output_type": "regression",
+  "unit": "bpm",
+  "weights_file": "hr_ring_stretch_v2.npz",
+  "task_description": "Heart rate from a 10 s ring PPG window, trained on windows the Live Analysis Engine rated good or fair (its heart rate as the label), each also time-stretched x0.7-x1.5 with the label scaled to match.",
+  "training": {
+    "recordings": [
+      55,
+      60,
+      65,
+      68,
+      70,
+      76,
+      94,
+      105,
+      108,
+      110,
+      118
+    ],
+    "labelled_windows": 1274,
+    "label_range_bpm": [
+      29.547000000000004,
+      135.0
+    ],
+    "ridge_alpha": 300,
+    "labels": "live_ppg heart rate, quality good or fair",
+    "augmentation": {
+      "time_stretch": [
+        0.67,
+        0.8,
+        0.9,
+        1.0,
+        1.11,
+        1.25,
+        1.5
+      ]
+    }
+  },
+  "validation": {
+    "method": "held-out recording 66 vs EmbracePlus, per-minute median",
+    "minutes": 37,
+    "mae": 5.390071120819658,
+    "bias": 2.258910361071348,
+    "sd_estimate": 5.347163504456826,
+    "sd_reference": 2.6610300789508337,
+    "correlation": -0.02361767801123348,
+    "best_constant_mae": 1.864864864864865
+  },
+  "validation_status": "pilot: labels from the rules engine, one held-out resting recording"
+}

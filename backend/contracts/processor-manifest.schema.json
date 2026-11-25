@@ -1,0 +1,380 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wearable-research.local/contracts/processor-manifest.schema.json",
+  "title": "Wearable Research Processor Manifest",
+  "description": "Model-independent declaration of a processor's requirements, transformations, outputs, execution adapter and reproducibility controls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "processor",
+    "lifecycle",
+    "execution",
+    "inputs",
+    "preprocessing",
+    "quality",
+    "outputs",
+    "reproducibility"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "processor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "display_name", "kind", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "transformer",
+            "feature_extractor",
+            "encoder",
+            "predictor",
+            "pipeline"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "requirements_status"],
+      "properties": {
+        "status": {
+          "enum": ["draft", "available", "disabled", "deprecated"]
+        },
+        "requirements_status": {
+          "enum": ["draft", "verified"]
+        },
+        "open_questions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter_id", "protocol", "deterministic", "timeout_ms"],
+      "properties": {
+        "adapter_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "protocol": {
+          "enum": ["processor-http-v1", "processor-local-v1"]
+        },
+        "deterministic": {
+          "type": "boolean"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resource_hints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cpu_supported": { "type": "boolean" },
+            "gpu_supported": { "type": "boolean" },
+            "minimum_memory_mb": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "role", "selector", "window", "sampling", "tensor"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "role": {
+            "enum": ["signal", "context", "mask", "metadata"]
+          },
+          "selector": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["modality", "channels", "unit"],
+            "properties": {
+              "modality": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stream": {
+                "type": "string",
+                "minLength": 1
+              },
+              "channels": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "window": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["duration_ms", "stride_ms", "alignment"],
+            "properties": {
+              "duration_ms": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "stride_ms": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "alignment": {
+                "enum": ["source_time", "sample_index", "experiment_time"]
+              }
+            }
+          },
+          "sampling": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source_rate_policy", "target_rate_policy", "gap_policy"],
+            "properties": {
+              "source_rate_policy": {
+                "enum": ["preserve", "exact", "range"]
+              },
+              "source_rate_hz": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "minimum_source_rate_hz": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "maximum_source_rate_hz": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "target_rate_policy": {
+                "enum": ["preserve", "exact", "processor_defined"]
+              },
+              "target_rate_hz": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "target_sample_count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "gap_policy": {
+                "enum": ["reject", "split", "interpolate_bounded"]
+              },
+              "maximum_gap_ms": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "tensor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dtype", "shape", "channel_order"],
+            "properties": {
+              "dtype": {
+                "enum": ["float32", "float64", "int16", "int32", "int64", "boolean", "string"]
+              },
+              "shape": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "anyOf": [
+                    { "type": "integer", "minimum": 1 },
+                    { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+                  ]
+                }
+              },
+              "channel_order": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "preprocessing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step_id", "operation", "version", "fit_scope", "parameters"],
+        "properties": {
+          "step_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "operation": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]*$"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fit_scope": {
+            "enum": ["none", "per_example", "training_only", "external_pretrained"]
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "emits_intermediate_artifact": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_clock_quality", "rules", "on_failure"],
+      "properties": {
+        "required_clock_quality": {
+          "enum": ["unknown_allowed", "declared", "reconstructed", "validated"]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]*$"
+          },
+          "uniqueItems": true
+        },
+        "on_failure": {
+          "enum": ["reject", "flag"]
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "artifact_type", "dtype", "shape", "storage", "semantics"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "artifact_type": {
+            "enum": [
+              "prepared_input",
+              "feature_vector",
+              "embedding",
+              "prediction",
+              "quality_report",
+              "export"
+            ]
+          },
+          "dtype": {
+            "enum": ["float32", "float64", "int32", "int64", "boolean", "string", "json"]
+          },
+          "shape": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "type": "integer", "minimum": 1 },
+                { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+              ]
+            }
+          },
+          "storage": {
+            "enum": ["json", "tabular", "blob_reference"]
+          },
+          "semantics": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_checksum",
+        "input_checksum",
+        "output_checksum",
+        "code_revision",
+        "environment_identifier",
+        "component_digest"
+      ],
+      "properties": {
+        "manifest_checksum": { "type": "boolean" },
+        "input_checksum": { "type": "boolean" },
+        "output_checksum": { "type": "boolean" },
+        "code_revision": { "type": "boolean" },
+        "environment_identifier": { "type": "boolean" },
+        "component_digest": { "type": "boolean" }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requires_fit": { "type": "boolean" },
+        "fit_split": { "enum": ["not_applicable", "training_only", "external_pretrained"] },
+        "grouping_unit": { "enum": ["participant", "experiment", "evidence_session", "not_applicable"] },
+        "supported_metrics": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

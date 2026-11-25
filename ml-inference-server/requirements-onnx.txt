@@ -1,0 +1,6 @@
+# Worker runtime without PyTorch: serves weights/papagei_s.onnx (made by export_onnx.py).
+Flask==2.3.3
+Flask-CORS==4.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+onnxruntime>=1.18.0

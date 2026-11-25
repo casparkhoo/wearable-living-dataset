@@ -1,0 +1,50 @@
+old
+.env
+backend/.env
+ml-inference-server/venv/
+node_modules/
+dist/
+.pnpm-store/
+target/
+tmp/
+.dual-graph/
+ml-inference-server/__pycache__/
+ml-inference-server/venv-py311/
+__pycache__/
+
+# Deployment secrets and local backups; never commit these.
+mosquitto/passwordfile
+.env.bak*
+*.sql.gz
+
+
+# Editor and IDE state
+.idea/
+**/.idea/
+.vscode/
+
+# Per-instance configuration and local data (see docs/SELF_HOSTING.md)
+deployment/cloud/deploy.env
+android-application/android/instance.properties
+backups/
+presentation_export/
+
+# LaTeX build products (the PDF is kept)
+thesis_report_C/**/*.aux
+thesis_report_C/**/*.log
+thesis_report_C/**/*.toc
+thesis_report_C/**/*.lof
+thesis_report_C/**/*.lot
+thesis_report_C/**/*.fls
+thesis_report_C/**/*.fdb_latexmk
+thesis_report_C/**/*.bbl
+thesis_report_C/**/*.blg
+thesis_report_C/**/*.out
+thesis_report_C/**/*.synctex.gz
+
+# Local list of strings that must never reach the public repository
+scripts/public_denylist.local
+
+# Copies of instance settings (hold passwords); only the .example templates are tracked
+.env.*
+!.env.example

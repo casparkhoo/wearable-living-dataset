@@ -1,0 +1,28 @@
+{
+  "head_id": "hr_ring_embraceplus",
+  "head_version": "2026-11-07",
+  "display_name": "Heart rate (PaPaGei-S + ridge)",
+  "base_model_id": "papagei_s",
+  "input_dimension": 512,
+  "output_type": "regression",
+  "unit": "bpm",
+  "weights_file": "hr_ring_embraceplus.npz",
+  "task_description": "Heart rate from a 10 s ring PPG window, labelled with EmbracePlus per-minute pulse rate.",
+  "training": {
+    "recordings": [
+      "replay55.tsv",
+      "replay60.tsv",
+      "replay65.tsv"
+    ],
+    "labelled_windows": 134,
+    "ridge_alpha": 417.53189365604044
+  },
+  "validation": {
+    "method": "leave-one-recording-out, per-minute median",
+    "minutes": 12,
+    "bias": -0.20000000298023224,
+    "mae": 3.799999952316284,
+    "within5": 9.0
+  },
+  "validation_status": "pilot: resting recordings only; not yet shown to beat a constant baseline"
+}

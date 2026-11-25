@@ -1,0 +1,20 @@
+# Topic access control.
+#
+# Participants share a broker, so without this every phone could subscribe to
+# sensors/# and read every other participant's stream, or publish into their
+# namespace. Access is keyed on the MQTT username, which is u<user_id>, and
+# topics are namespaced to match.
+#
+# Regenerate the companion password file with scripts/sync_mqtt_users.sh
+# whenever participants are added, then reload the broker.
+
+# The backend ingests every participant's data and publishes status, so it is
+# the only client with access to the whole tree.
+user wearable_backend
+topic readwrite #
+
+# Each participant may publish only their own sensor data and read only their
+# own status. %u expands to the connecting username, so one rule covers all of
+# them and no participant can name another's namespace.
+pattern write sensors/%u/#
+pattern read status/%u/#

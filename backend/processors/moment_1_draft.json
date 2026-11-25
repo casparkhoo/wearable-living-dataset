@@ -1,0 +1,130 @@
+{
+  "$schema": "../contracts/processor-manifest.schema.json",
+  "contract_version": "1.0.0",
+  "processor": {
+    "id": "moment_1",
+    "version": "0.1.0-draft",
+    "display_name": "MOMENT-1 time-series encoder",
+    "kind": "encoder",
+    "description": "General-purpose pretrained time-series encoder used to verify that the contract is not specific to PaPaGei.",
+    "source_url": "https://github.com/moment-timeseries-foundation-model/moment"
+  },
+  "lifecycle": {
+    "status": "draft",
+    "requirements_status": "draft",
+    "open_questions": [
+      "Verify the exact input length, padding or interpolation policy for the selected checkpoint.",
+      "Verify the normalisation convention and embedding dimension using the pinned MOMENT release.",
+      "Record the checkpoint revision, licence and digest before the first persisted run."
+    ]
+  },
+  "execution": {
+    "adapter_id": "moment_1_http",
+    "protocol": "processor-http-v1",
+    "deterministic": true,
+    "timeout_ms": 120000,
+    "resource_hints": {
+      "cpu_supported": true,
+      "gpu_supported": true,
+      "minimum_memory_mb": 4096
+    }
+  },
+  "inputs": [
+    {
+      "name": "time_series",
+      "role": "signal",
+      "selector": {
+        "modality": "ppg",
+        "stream": "ppg",
+        "channels": ["green"],
+        "unit": "count"
+      },
+      "window": {
+        "duration_ms": 10000,
+        "stride_ms": 5000,
+        "alignment": "source_time"
+      },
+      "sampling": {
+        "source_rate_policy": "preserve",
+        "target_rate_policy": "processor_defined",
+        "gap_policy": "reject"
+      },
+      "tensor": {
+        "dtype": "float32",
+        "shape": [1, 1, "processor_defined_time"],
+        "channel_order": ["green"]
+      }
+    }
+  ],
+  "preprocessing": [
+    {
+      "step_id": "validate_window",
+      "operation": "quality.window_validation",
+      "version": "1.0.0",
+      "fit_scope": "none",
+      "parameters": {
+        "require_finite": true,
+        "reject_flatline": true,
+        "reject_gaps": true
+      },
+      "emits_intermediate_artifact": false
+    },
+    {
+      "step_id": "resolve_input_length",
+      "operation": "signal.processor_defined_length",
+      "version": "draft",
+      "fit_scope": "none",
+      "parameters": {
+        "status": "to_be_verified_against_pinned_checkpoint"
+      },
+      "emits_intermediate_artifact": true
+    },
+    {
+      "step_id": "normalise",
+      "operation": "signal.processor_documented_normalization",
+      "version": "draft",
+      "fit_scope": "none",
+      "parameters": {
+        "status": "to_be_verified_against_pinned_checkpoint"
+      },
+      "emits_intermediate_artifact": true
+    }
+  ],
+  "quality": {
+    "required_clock_quality": "declared",
+    "rules": ["finite_values", "non_flatline", "continuous_source_interval"],
+    "on_failure": "reject"
+  },
+  "outputs": [
+    {
+      "name": "embedding",
+      "artifact_type": "embedding",
+      "dtype": "float32",
+      "shape": ["embedding_dimension"],
+      "storage": "blob_reference",
+      "semantics": "General time-series encoder representation; not a physiological prediction."
+    },
+    {
+      "name": "quality_report",
+      "artifact_type": "quality_report",
+      "dtype": "json",
+      "shape": [],
+      "storage": "json",
+      "semantics": "Input-quality measurements and applied preprocessing parameters."
+    }
+  ],
+  "reproducibility": {
+    "manifest_checksum": true,
+    "input_checksum": true,
+    "output_checksum": true,
+    "code_revision": true,
+    "environment_identifier": true,
+    "component_digest": true
+  },
+  "evaluation": {
+    "requires_fit": false,
+    "fit_split": "external_pretrained",
+    "grouping_unit": "experiment",
+    "supported_metrics": ["lineage_completeness", "rerun_agreement", "runtime_ms", "artifact_size_bytes"]
+  }
+}
